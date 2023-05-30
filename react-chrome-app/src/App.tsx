@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-
+import { OpenAIApi, Configuration } from 'openai'
 
 function App() {
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -25,7 +25,7 @@ function App() {
 
       if (message !== "") {
         appendMessage(message, "sent-message");
-        simulateResponse();
+        simulateResponse(message);
         messageInputRef.current.value = "";
       }
     }
@@ -53,12 +53,34 @@ function App() {
     }
   };
 
-  const simulateResponse = () => {
-    const responseDelay = Math.floor(Math.random() * 2000) + 500; // Simulate response delay between 500ms and 2500ms
 
+  const simulateResponse = (message: string) => {
+    const responseDelay = Math.floor(Math.random() * 2000) + 500; // Simulate response delay between 500ms and 2500ms
+    //create an open ai response
+    const configuration = new Configuration({
+      apiKey: 'HpnEaM9O9Hooq78BYE9IT3BlbkFJWsqkzM3VIWd6Q2BUCBKL',
+    });
+    const prompt = `
+    You are an intelligent shopping assistant that can only access items from the list of products that are given to you. 
+    We have a goal in mind and we want to find the best way to achieve it using the given products.
+    Since you are given the product ID's, descriptions, and prices, you can use all of this information.
+    Your response should be a bundle of products that you think will help us achieve our goal. 
+    It should be formatted like:
+    {{product_id: 1234, quantity: 1}, {product_id: 5678, quantity: 2}, {product_id: 9101, quantity: 3}}
+    
+    Here is the goal we want to achieve through shopping: ${message}
+
+  `
+    const openai = new OpenAIApi(configuration);
+    const response = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt: prompt,
+      max_tokens: 100,
+      temperature: 0.7,
+    })
+    const result = response.data.choices[0].text!;
     setTimeout(() => {
-      const responseMessage = "This is a response message.";
-      appendMessage(responseMessage, "received-message");
+      appendMessage(result, "received-message");
     }, responseDelay);
   };
 
